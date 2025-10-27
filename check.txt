@@ -1,0 +1,45 @@
+from pyspark.sql import SparkSession
+
+spark=SparkSession.builder.appName('RDD').getOrCreate()
+
+spark
+
+rdd = spark.sparkContext.textFile("employee.csv")
+
+
+
+rdd = spark.sparkContext.textFile("employee.csv")
+header = rdd.first()
+employee_rdd = rdd.filter(lambda line: line != header).map(lambda line: line.split(","))
+
+
+
+record_count = employee_rdd.count()
+print("Total number of records:", record_count)
+
+
+
+filtered_rdd = employee_rdd.filter(lambda x: int(x[4]) > 2014)
+print("\nEmployees who joined after 2014:")
+for emp in filtered_rdd.collect():
+    print(emp)
+
+
+
+names_rdd = employee_rdd.map(lambda x: x[1])
+print("\nEmployee Names:")
+for name in names_rdd.collect():
+    print(name)
+
+
+
+dept_avg_salary = (
+    employee_rdd
+    .map(lambda x: (x[2], int(x[3])))        
+    .groupByKey()                            
+    .mapValues(lambda s: sum(s) / len(s))    
+)
+
+print("\nAverage Salary by Department:")
+for dept, avg in dept_avg_salary.collect():
+    print(f"{dept}: {avg:.2f}")
